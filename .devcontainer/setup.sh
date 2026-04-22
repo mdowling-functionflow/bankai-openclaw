@@ -81,23 +81,25 @@ for i in {1..60}; do
   sleep 2
 done
 
-# 7. Create a convenience script the student can run to approve device pairing
+# 7. Create a convenience script the student runs after they see
+#    "device pairing required" in the browser. Parses UUIDs out of the
+#    CLI's table output (devices list doesn't support --json on this build).
 cat > ~/pair.sh <<'PAIR'
 #!/bin/bash
 # Approves every pending device pairing request. Run this once after you
 # see "device pairing required" in your browser.
 set -e
 cd /workspaces/*/
-IDS=$(docker compose exec -T openclaw openclaw devices list --json 2>/dev/null \
-      | grep -oE '"requestId":"[^"]+"' \
-      | cut -d'"' -f4)
+IDS=$(docker compose exec -T openclaw openclaw devices list 2>/dev/null \
+      | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' \
+      | sort -u)
 if [ -z "$IDS" ]; then
   echo "No pending pairing requests. Reload the browser tab and try Connect."
   exit 0
 fi
 for id in $IDS; do
   echo "Approving $id..."
-  docker compose exec -T openclaw openclaw devices approve "$id"
+  docker compose exec -T openclaw openclaw devices approve "$id" || true
 done
 echo ""
 echo "✅ All paired. Reload the browser tab and click Connect."
