@@ -2,49 +2,60 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/mdowling-functionflow/bankai-openclaw?quickstart=1)
 
-Your own personal OpenClaw running in GitHub Codespaces. No install, no account setup, no infrastructure. Works on any university or locked-down computer with a browser.
+Your own personal OpenClaw, running in GitHub Codespaces. No install, no infrastructure. Works on any university computer with a browser.
 
-## For students: how to launch your OpenClaw
+## How to launch your OpenClaw
 
-1. Click the green **Open in GitHub Codespaces** button above
-2. If prompted, sign in to GitHub (free account, takes two minutes if you don't have one)
+1. **Click the green Open in GitHub Codespaces button above**
+2. If GitHub asks, sign in (free account, two minutes to create one)
 3. Click **Create codespace on main**
-4. Wait two to three minutes while everything boots
-5. The terminal will print a URL ending in `?token=workshop` — Cmd+Click (or Ctrl+Click on Windows) to open it
-6. You are now using your own OpenClaw
+4. Wait two to three minutes while everything downloads and starts
+5. The Codespace terminal will print a URL ending in `?token=workshop`
+6. Cmd+Click (Mac) or Ctrl+Click (Windows) the URL to open it in a new tab
+7. The first time you click Connect you will see "device pairing required". That is expected.
+8. Come back to the Codespace terminal and run:
 
-If you close the browser tab, your OpenClaw keeps running. Come back to [github.com/codespaces](https://github.com/codespaces), find your workshop codespace, and reopen it.
+   ```
+   ~/pair.sh
+   ```
 
-## If you need an OpenRouter key
+9. Reload the browser tab, click Connect again. You are now using OpenClaw.
 
-The instructor will share a workshop key in class. When the Codespace terminal asks for it, paste it in and press Enter. Nothing will show as you paste — that is a security feature.
+If you close the browser tab, your OpenClaw keeps running. Go to [github.com/codespaces](https://github.com/codespaces) to find your workshop codespace and reopen it.
 
-If you want your own permanent key, it is free to create: go to [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys), generate a key, and set a credit limit so you never get a surprise bill.
+## FAQ
 
-## For the instructor: one-time setup
+**Do I need my own OpenRouter key?**
+No. The instructor provides a shared key via Codespaces secrets. If the setup script asks for a key, the instructor will share one on screen.
 
-1. Create a new public GitHub repo (any name, e.g. `bankai-openclaw`)
-2. Copy all the files from this folder into the repo root and push
-3. Edit the badge URL at the top of this README to point at your repo (two `REPLACE_WITH_...` placeholders)
-4. Optional but recommended: set an **organization-level** or **repository-level** Codespaces secret named `OPENROUTER_API_KEY` so students do not have to paste it. Go to the repo → Settings → Secrets and variables → Codespaces → New repository secret.
-5. Send students the repo URL. They click the badge and go.
+**What model am I using?**
+Kimi K2.6 via OpenRouter. Released 20 April 2026. Good at long-horizon coding, multi-agent orchestration, and most general tasks. The instructor can switch this in `openclaw.json` if needed.
 
-### Cost sanity check
+**Does this cost me anything?**
+Zero. GitHub Codespaces free tier covers 120 core-hours per month. A three-hour workshop uses about six of those. OpenRouter calls are paid by the instructor from a shared capped key.
 
-Each student gets up to 120 core-hours per month of Codespaces free tier. A two-machine spec (4-core) uses two core-hours per wall-clock hour, so 60 real hours per month. A three-hour workshop consumes six core-hours, which is five percent of their monthly allowance. Zero cost to you or them.
+## For the instructor
 
-OpenRouter API calls are the real cost. With 20 students using Claude Sonnet via OpenRouter, budget roughly $15 to $40 for the session depending on how much they iterate. Set a hard credit limit on the OpenRouter key before distributing it.
+### One-time setup
 
-### What happens under the hood
+1. Create a public GitHub repo, copy these files in, push
+2. Edit the badge URL at the top of this README so it points at your repo (two `REPLACE_WITH_...` placeholders)
+3. In repo Settings → Secrets and variables → Codespaces → New repository secret, add `OPENROUTER_API_KEY` with your OpenRouter key
+4. Go to openrouter.ai/settings/keys and set a credit limit on the key (suggest $50 for a 20-person workshop)
+5. Share the repo URL with students
 
-The Codespace boots Ubuntu, installs Docker, and runs `coollabsio/openclaw:latest`. OpenClaw's Control UI is served on port 8080, which Codespaces auto-forwards to a public HTTPS URL. The student opens that URL with `?token=workshop` appended, and the Control UI connects to the gateway via WebSocket. Because the gateway binds to the Codespace's loopback interface and Codespaces' port-forwarding proxy forwards from localhost, OpenClaw grants full operator scope without requiring device pairing.
+### Smoke test (tonight)
 
-### Troubleshooting
+Click your own Open in Codespaces badge. Run through steps 4 to 9 above. Confirm the chat interface loads and Kimi responds to "hello".
 
-**The URL 404s or shows "port not forwarded yet"**: the container is still starting. Wait another minute, then click the **PORTS** tab at the bottom of the Codespace, confirm port 8080 is forwarded, and right-click it to open in browser.
+### Tear down (after class)
 
-**"origin not allowed" when connecting**: the `dangerouslyAllowHostHeaderOriginFallback` setting in `docker-compose.yml` should prevent this, but if a student sees it, open the Codespace terminal and run `docker compose restart openclaw`.
+Students' codespaces auto-pause after 30 minutes idle and auto-delete after 30 days. If you want to force-delete sooner:
+- Go to github.com/codespaces, find ones belonging to your repo, delete
+- Or rotate the `OPENROUTER_API_KEY` secret so further usage fails
 
-**Student used their free Codespace hours already**: unlikely for a single workshop but possible if they leave codespaces running. They can delete old codespaces at github.com/codespaces to free up the quota.
+### What's under the hood (for troubleshooting)
 
-**OpenRouter rate limit hit**: a student is spamming requests. Raise the OpenRouter credit limit or add per-key rate limiting at openrouter.ai.
+The Codespace runs Ubuntu with Docker. `coollabsio/openclaw:latest` runs as a container on port 8080. Codespaces forwards the port to a public HTTPS URL. The gateway is configured with `dangerouslyAllowHostHeaderOriginFallback` because Codespaces' proxy presents the browser's origin as `https://localhost:8080`, which the gateway wouldn't otherwise recognise.
+
+Device pairing is the one manual step because OpenClaw 2026.2.21+ requires it for non-localhost connections as a security measure. The `~/pair.sh` convenience script approves all pending requests in one command.
