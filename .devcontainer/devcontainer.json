@@ -1,0 +1,29 @@
+{
+  "name": "Narrative OpenClaw Workshop",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "waitFor": "postCreateCommand",
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "OpenClaw",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    }
+  },
+  "remoteEnv": {
+    "OPENROUTER_API_KEY": "${localEnv:OPENROUTER_API_KEY}"
+  },
+  "secrets": {
+    "OPENROUTER_API_KEY": {
+      "description": "Your OpenRouter API key. Get one at openrouter.ai/settings/keys",
+      "documentationUrl": "https://openrouter.ai/settings/keys"
+    }
+  }
+}
