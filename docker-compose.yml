@@ -4,21 +4,20 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
-    # nginx in the image references a "browser" upstream (kasmweb sidecar).
-    # We don't want the sidecar for the workshop, so point "browser" at
-    # localhost so nginx starts without resolving errors.
+    # nginx inside the image references a "browser" upstream for the optional
+    # Chrome sidecar. We don't use it, so point the name at localhost so nginx
+    # starts cleanly.
     extra_hosts:
       - "browser:127.0.0.1"
     environment:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       OPENCLAW_GATEWAY_TOKEN: workshop
-      # Let the gateway accept WebSocket origins that match the Host header.
-      # Codespaces forwards from a URL we don't know at container boot, so
-      # explicit allowedOrigins can't be set. Host-header fallback is the
-      # documented workaround for this exact case.
-      OPENCLAW_CONFIG_JSON: '{"gateway":{"controlUi":{"dangerouslyAllowHostHeaderOriginFallback":true}}}'
     volumes:
       - openclaw-data:/data
+      # openclaw.json is written by .devcontainer/setup.sh so that it can pick
+      # up the Codespace-specific origin at runtime. This named volume is the
+      # same one the container uses for /data, so the file lands at
+      # /data/.openclaw/openclaw.json inside the container.
 
 volumes:
   openclaw-data:
